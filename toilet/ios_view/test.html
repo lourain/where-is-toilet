@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>Text</title>
+    <script src="//webapi.amap.com/maps?v=1.4.6&key=3d964d371d4c323a4a3318c668a8bfc4"></script>
+    <style>
+        html,body,#container {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="container"></div>
+<script>
+    var map = new AMap.Map("container", {
+        viewMode: '3D',
+        resizeEnable: true,
+        center: [116.40, 39.90], //地图中心点
+    });
+
+    var text = new AMap.Text({
+        text:'纯文本标记',
+        textAlign:'center', // 'left' 'right', 'center',
+        verticalAlign:'middle', //middle 、bottom
+        draggable:true,
+        cursor:'pointer',
+        angle:10,
+        style:{
+            'background-color':'yellow',
+            'border':'solid 1px #0088ff',
+            'padding':'10px 20px'
+        },
+        position: [116.396923,39.714110]
+    });
+    text.setMap(map);
+</script>
+</body>
+
+</html>

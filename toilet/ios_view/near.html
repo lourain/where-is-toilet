@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>浏览器定位</title>
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+    <style>
+        #panel {
+            position: fixed;
+            background-color: white;
+            max-height: 90%;
+            overflow-y: auto;
+            top: 10px;
+            right: 10px;
+            width: 280px;
+            border-bottom: solid 1px silver;
+        }
+    </style>
+    <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.6&key=3d964d371d4c323a4a3318c668a8bfc4"></script>
+    <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.6&key=3d964d371d4c323a4a3318c668a8bfc4&plugin=AMap.Walking"></script>
+    <script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+<body>
+<div id='container'></div>
+<div id="tip"></div>
+<!--<div id="panel"></div>-->
+<script type="text/javascript">
+    /***************************************
+     由于Chrome、IOS10等已不再支持非安全域的浏览器定位请求，为保证定位成功率和精度，请尽快升级您的站点到HTTPS。
+     ***************************************/
+    var map, geolocation;
+    //加载地图，调用浏览器定位服务
+    map = new AMap.Map('container', {
+        resizeEnable: true
+    });
+    map.plugin('AMap.Geolocation', function () {
+        geolocation = new AMap.Geolocation({
+            enableHighAccuracy: true,//是否使用高精度定位，默认:true
+            timeout: 10000,          //超过10秒后停止定位，默认：无穷大
+            buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+            zoomToAccuracy: true,      //定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+            buttonPosition: 'RB'
+        });
+        map.addControl(geolocation);
+        geolocation.getCurrentPosition();
+        AMap.event.addListener(geolocation, 'complete', onComplete);//返回定位信息
+        AMap.event.addListener(geolocation, 'error', onError);      //返回定位出错信息
+    });
+
+    //解析定位结果
+    function onComplete(data) {
+        var str = ['定位成功'];
+        str.push('经度：' + data.position.getLng());
+        str.push('纬度：' + data.position.getLat());
+        if (data.accuracy) {
+            str.push('精度：' + data.accuracy + ' 米');
+        }//如为IP精确定位结果则没有精度信息
+        str.push('是否经过偏移：' + (data.isConverted ? '是' : '否'));
+        document.getElementById('tip').innerHTML = str.join('<br>');
+        //附近服务
+        AMap.service('AMap.PlaceSearch', function () {//回调函数
+            var placeSearch = new AMap.PlaceSearch({ //构造地点查询类
+                pageSize: 3,
+                // typ: '美食',
+                pageIndex: 3,
+                city: data.addressComponent.citycode, //城市
+                map: map,
+                //panel: "panel"
+            });
+            var cpoint = [data.position.lng, data.position.lat];
+            placeSearch.searchNearBy('厕所', cpoint, 200, function (status, result) {
+                console.log(result.poiList.pois);
+                var pois = result.poiList.pois
+                for (var item of pois) {
+                    var text = new AMap.Text({
+                        text: item.name,
+                        textAlign: 'center', // 'left' 'right', 'center',
+                        verticalAlign: 'middle', //middle 、bottom
+                        draggable: false,
+                        cursor: 'pointer',
+                        clickable: true,
+                        topWhenClick: true,
+                        // animation:"AMAP_ANIMATION_BOUNCE",
+                        style: {
+                            'background-color': 'yellow',
+                            'border': 'solid 1px #0088ff',
+                            'padding': '3px'
+                        },
+                        position: [item.location.lng, item.location.lat]
+                    });
+                    text.setMap(map);
+                    AMap.event.addListener(text, 'click', walkLine)
+                }
+
+                function walkLine(e) {
+                    var walking = new AMap.Walking({
+                        map: map,
+                    });
+                    walking.search(cpoint, [e.lnglat.lng, e.lnglat.lat]);
+                }
+
+            });
+        })
+    }
+
+    //解析定位错误信息
+    function onError(data) {
+        document.getElementById('tip').innerHTML = '定位失败';
+    }
+
+
+</script>
+</body>
+</html>
